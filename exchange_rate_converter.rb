@@ -34,7 +34,7 @@ class ExchangeRateConverter
     end while rate == nil && date_key > MIN_DATE_KEY
 
     if rate
-      (amount * rate.to_f).round(2)
+      (amount / rate.to_f).round(2)
     else
       raise RatesNotLoaded.new
     end

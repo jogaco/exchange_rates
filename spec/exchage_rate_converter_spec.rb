@@ -39,13 +39,13 @@ describe ExchangeRateConverter do
 
   describe '#convert_amount_rate' do
     it 'should convert with the rate of an existing date' do
-      ExchangeRateConverter.send(:store_rate_for_date, '2016-01-01', 1.25)
-      expect(ExchangeRateConverter.convert(10, '2016-01-01')).to eq 12.5
+      ExchangeRateConverter.send(:store_rate_for_date, '2016-01-01', 1.232)
+      expect(ExchangeRateConverter.convert(10, '2016-01-01')).to eq 8.12
     end
 
     it 'should convert with the rate of the nearest previous date' do
-      ExchangeRateConverter.send(:store_rate_for_date, '2015-12-30', 1.25)
-      expect(ExchangeRateConverter.convert(10, '2016-01-01')).to eq 12.5
+      ExchangeRateConverter.send(:store_rate_for_date, '2015-12-30', 1.232)
+      expect(ExchangeRateConverter.convert(10, '2016-01-01')).to eq 8.12
     end
 
     it 'should not convert dates previous to 2000' do
