@@ -24,5 +24,34 @@ describe ExchangeRateConverter do
       ExchangeRateConverter::RATES_FILE = 'spec/support/rates.csv'
       ExchangeRateConverter.upload_rates_to_database
     end
+
+    it 'should not upload a bad exchange rate file' do
+      allow(Database).to receive(:store)
+
+      expect(Database).not_to receive(:store)
+
+      ExchangeRateConverter::RATES_FILE = 'spec/support/rates_bad.csv'
+      expect {
+        ExchangeRateConverter.upload_rates_to_database
+      }.to raise_error(FileFormatError)
+    end
+  end
+
+  describe '#convert_amount_rate' do
+    it 'should convert with the rate of an existing date' do
+      ExchangeRateConverter.send(:store_rate_for_date, '2016-01-01', 1.25)
+      expect(ExchangeRateConverter.convert(10, '2016-01-01')).to eq 12.5
+    end
+
+    it 'should convert with the rate of the nearest previous date' do
+      ExchangeRateConverter.send(:store_rate_for_date, '2015-12-30', 1.25)
+      expect(ExchangeRateConverter.convert(10, '2016-01-01')).to eq 12.5
+    end
+
+    it 'should not convert dates previous to 2000' do
+      expect{
+        ExchangeRateConverter.convert(10, '1999-01-01')
+      }.to raise_error(ArgumentError)
+    end
   end
 end

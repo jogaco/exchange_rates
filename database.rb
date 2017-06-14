@@ -7,7 +7,10 @@ class Database
     end
 
     def self.read(key)
-      connection.get(key).to_f
+      val = connection.get(key)
+      if val
+        val.to_f
+      end
     end
 
     private

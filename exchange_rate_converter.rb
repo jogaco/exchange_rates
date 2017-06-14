@@ -1,4 +1,6 @@
 require 'net/http'
+require 'date'
+require_relative 'database'
 
 class FileFormatError < Exception; end
 
@@ -42,16 +44,46 @@ class ExchangeRateConverter
       end
 
       unless rate < RATE_ZERO
-        Database.store(key_from_date(date), rate)
+        store_rate_for_date(date, rate)
       end
+    end
+    true
+  end
+
+  def self.convert(amount, date)
+    key = key_from_date(date)
+    if key < MIN_DATE_KEY
+      raise ArgumentError.new('Invalid date. Date must be from 2000 onwards')
+    end
+
+    date_key = key_from_date(date)
+
+    begin
+      rate = Database.read(date_key)
+      if rate == nil
+        date_key -= 1
+      end
+    end while rate == nil && date_key > MIN_DATE_KEY
+
+    if rate
+      (amount * rate.to_f).round(2)
     end
   end
 
   private
 
-  def self.key_from_date(date)
-    date.to_time.to_i / (3600*24)
+  def self.store_rate_for_date(date, rate)
+    Database.store(key_from_date(date), rate)
   end
 
+  def self.key_from_date(date)
+    date_time = date
+    unless date.respond_to?(:to_time)
+      date_time = Date.parse(date)
+    end
+    date_time.to_time.to_i / (3600*24)
+  end
+
+  MIN_DATE_KEY = self.key_from_date('2001-01-01')
 
 end
