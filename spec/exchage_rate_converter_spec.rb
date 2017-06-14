@@ -14,4 +14,15 @@ describe ExchangeRateConverter do
       expect(WebMock).to have_requested(:get, url).with(:headers => headers)
     end
   end
+
+  describe '#upload_rates_to_database' do
+    it 'should upload each exchange rate to the database' do
+      allow(Database).to receive(:store)
+
+      expect(Database).to receive(:store)
+
+      ExchangeRateConverter::RATES_FILE = 'spec/support/rates.csv'
+      ExchangeRateConverter.upload_rates_to_database
+    end
+  end
 end
