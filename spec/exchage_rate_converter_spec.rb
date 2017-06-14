@@ -53,5 +53,13 @@ describe ExchangeRateConverter do
         ExchangeRateConverter.convert(10, '1999-01-01')
       }.to raise_error(ArgumentError)
     end
+
+    it 'should raise error if database is empty' do
+      allow(Database).to receive(:read).and_return(nil)
+
+      expect{
+        ExchangeRateConverter.convert(10, '2015-01-01')
+      }.to raise_error(RatesNotLoaded)
+    end
   end
 end

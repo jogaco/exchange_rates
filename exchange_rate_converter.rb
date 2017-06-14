@@ -3,6 +3,7 @@ require 'date'
 require_relative 'database'
 
 class FileFormatError < Exception; end
+class RatesNotLoaded < Exception; end
 
 class ExchangeRateConverter
 
@@ -11,6 +12,35 @@ class ExchangeRateConverter
   RATES_FILE = 'rates.csv'
   CSV_SEPARATOR = ','
   RATE_ZERO = 0.000001
+
+  def self.load_rates_into_database
+    download_rates
+    upload_rates_to_database
+  end
+
+  def self.convert(amount, date)
+    key = key_from_date(date)
+    if key < MIN_DATE_KEY
+      raise ArgumentError.new('Invalid date. Date must be from 2000 onwards')
+    end
+
+    date_key = key_from_date(date)
+
+    begin
+      rate = Database.read(date_key)
+      if rate == nil
+        date_key -= 1
+      end
+    end while rate == nil && date_key > MIN_DATE_KEY
+
+    if rate
+      (amount * rate.to_f).round(2)
+    else
+      raise RatesNotLoaded.new
+    end
+  end
+
+  private
 
   def self.download_rates
     Net::HTTP.start(RATES_HOST) { |http|
@@ -49,28 +79,6 @@ class ExchangeRateConverter
     end
     true
   end
-
-  def self.convert(amount, date)
-    key = key_from_date(date)
-    if key < MIN_DATE_KEY
-      raise ArgumentError.new('Invalid date. Date must be from 2000 onwards')
-    end
-
-    date_key = key_from_date(date)
-
-    begin
-      rate = Database.read(date_key)
-      if rate == nil
-        date_key -= 1
-      end
-    end while rate == nil && date_key > MIN_DATE_KEY
-
-    if rate
-      (amount * rate.to_f).round(2)
-    end
-  end
-
-  private
 
   def self.store_rate_for_date(date, rate)
     Database.store(key_from_date(date), rate)
